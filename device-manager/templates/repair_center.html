@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white" data-i18n="repair.title">Repair Center</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1" id="count" data-i18n="common.loading">Loading...</p>
+        </div>
+        <button onclick="toggleForm()" class="btn-primary" id="newRepairBtn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span data-i18n="repair.new_record">New Repair Record</span>
+        </button>
+    </div>
+
+    <div id="repairForm" class="card p-6" style="display:none">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4" data-i18n="repair.create">Create Repair Record</h2>
+        <form onsubmit="createRepair(event)" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="repair.select_device">Select Device *</label>
+                    <select id="formDeviceId" class="input-field" required>
+                        <option value="" data-i18n="repair.choose_device">Choose a device...</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="repair.issue_desc">Issue Description</label>
+                    <textarea id="formIssue" class="input-field resize-none" rows="2" data-i18n-placeholder="repair.issue_desc" placeholder="Describe the issue..."></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="repair.symptoms">Observed Symptoms</label>
+                    <input type="text" id="formSymptoms" class="input-field" data-i18n-placeholder="repair.symptoms" placeholder="e.g. No display, unusual noise">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="repair.probable_cause">Probable Cause</label>
+                    <input type="text" id="formCause" class="input-field" data-i18n-placeholder="repair.probable_cause" placeholder="e.g. Faulty PSU">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="repair.technician">Assigned Technician</label>
+                    <input type="text" id="formTech" class="input-field" data-i18n-placeholder="repair.technician" placeholder="Technician name">
+                </div>
+            </div>
+            <div class="flex justify-end">
+                <button type="submit" class="btn-primary" data-i18n="repair.create">Create Repair Record</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="glass rounded-xl p-4 border">
+        <select id="statusFilter" class="input-field min-w-[160px]" onchange="loadRepairs()">
+            <option value="" data-i18n="systems.all_statuses">All Statuses</option>
+            <option value="PENDING" data-i18n="repair_status.PENDING">Pending</option>
+            <option value="IN_PROGRESS" data-i18n="repair_status.IN_PROGRESS">In Progress</option>
+            <option value="COMPLETED" data-i18n="repair_status.COMPLETED">Completed</option>
+            <option value="CANCELLED" data-i18n="repair_status.CANCELLED">Cancelled</option>
+        </select>
+    </div>
+
+    <div id="repairsList" class="space-y-3"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+
+    function toggleForm() {
+        const form = document.getElementById('repairForm');
+        const btn = document.getElementById('newRepairBtn');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        btn.innerHTML = (form.style.display === 'block' ? __('repair.cancel') : __('repair.new_record'));
+    }
+
+    function loadDevices() {
+        fetch('/api/devices?status=DAMAGED,IN_REPAIR,PENDING_INSPECTION')
+            .then(r=>r.json())
+            .then(devices => {
+                const sel = document.getElementById('formDeviceId');
+                const deviceId = urlParams.get('deviceId');
+                sel.innerHTML = '<option value="">'+__('repair.choose_device')+'</option>' + devices.map(d =>
+                    `<option value="${d.id}" ${d.id===deviceId?'selected':''}>${d.name}</option>`
+                ).join('');
+            });
+    }
+
+    function createRepair(e) {
+        e.preventDefault();
+        const data = {
+            deviceId: document.getElementById('formDeviceId').value,
+            issueDescription: document.getElementById('formIssue').value,
+            symptoms: document.getElementById('formSymptoms').value,
+            probableCause: document.getElementById('formCause').value,
+            assignedTechnician: document.getElementById('formTech').value,
+            repairStatus: 'PENDING'
+        };
+        if (!data.deviceId) { showToast(__('toast.select_device'), 'error'); return; }
+        fetch('/api/repairs', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        }).then(r=>{
+            if (!r.ok) throw new Error('Failed');
+            showToast(__('repair.create_success'), 'success');
+            toggleForm();
+            loadRepairs();
+        }).catch(()=>showToast(__('toast.failed'), 'error'));
+    }
+
+    function loadRepairs() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        const deviceId = urlParams.get('deviceId');
+        const params = new URLSearchParams();
+        if (statusFilter) params.set('repairStatus', statusFilter);
+        if (deviceId) params.set('deviceId', deviceId);
+
+        const list = document.getElementById('repairsList');
+        list.innerHTML = '<div class="flex justify-center py-10"><div class="spinner"></div></div>';
+
+        fetch('/api/repairs?'+params.toString()).then(r=>r.json()).then(repairs => {
+            document.getElementById('count').textContent = repairs.length + ' ' + __('repair.count');
+            if (repairs.length === 0) {
+                list.innerHTML = '<div class="card p-12 text-center"><p class="text-sm text-gray-500">'+__('repair.no_records')+'</p></div>';
+                return;
+            }
+            list.innerHTML = repairs.map(r => `
+                <a href="/repair/${r.id}" class="card p-4 flex items-center justify-between hover:shadow-md transition-all group">
+                    <div class="flex items-center gap-4 min-w-0 flex-1">
+                        <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/50 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">${r.device.name}</h3>
+                                ${categoryBadge(r.device.category)}
+                            </div>
+                            <p class="text-xs text-gray-500 mt-0.5 truncate">${r.issue_description || __('common.no_data')}</p>
+                            <div class="flex items-center gap-3 mt-1">
+                                ${r.assigned_technician ? '<span class="text-xs text-gray-400">'+__('common.tech')+': '+r.assigned_technician+'</span>' : ''}
+                                <span class="text-xs text-gray-400">${formatDate(r.entry_date)}</span>
+                                ${r.repair_cost !== null ? '<span class="text-xs text-gray-400">$'+r.repair_cost.toFixed(2)+'</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ${statusBadge(r.repair_status)}
+                </a>
+            `).join('');
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadDevices();
+        loadRepairs();
+        if (urlParams.get('deviceId')) toggleForm();
+    });
+</script>
+{% endblock %}

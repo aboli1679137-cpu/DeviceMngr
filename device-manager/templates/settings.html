@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white" data-i18n="settings.title">Settings</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1" data-i18n="settings.subtitle">Manage your workspace preferences</p>
+    </div>
+
+    <div class="flex gap-1 p-1 glass rounded-xl border" id="settingsTabs">
+        <button onclick="switchTab('appearance')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all flex-1 justify-center bg-white dark:bg-gray-800 shadow-sm text-blue-600" id="tab-appearance">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            <span data-i18n="settings.appearance">Appearance</span>
+        </button>
+        <button onclick="switchTab('system')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all flex-1 justify-center text-gray-500 hover:text-gray-700" id="tab-system">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            <span data-i18n="settings.system">System</span>
+        </button>
+        <button onclick="switchTab('about')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all flex-1 justify-center text-gray-500 hover:text-gray-700" id="tab-about">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span data-i18n="settings.about">About</span>
+        </button>
+    </div>
+
+    <div id="tab-appearance-content" class="card p-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4" data-i18n="settings.appearance">Appearance</h2>
+        <div class="flex items-center justify-between p-4 rounded-lg border">
+            <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                <div><p class="text-sm font-medium text-gray-900 dark:text-white" data-i18n="settings.theme">Theme Mode</p><p class="text-xs text-gray-500" id="themeLabel" data-i18n="settings.light">Light Mode</p></div>
+            </div>
+            <div class="toggle" id="themeToggleBtn" onclick="toggleSettingsTheme()">
+                <div class="toggle-knob"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-system-content" class="card p-6" style="display:none">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4" data-i18n="settings.system">System Information</h2>
+        <div class="space-y-3">
+            <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+                <div><p class="text-sm font-medium text-gray-900" data-i18n="settings.database">Database</p><p class="text-xs text-gray-500" data-i18n="settings.db_desc">SQLite (local)</p></div>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                <div><p class="text-sm font-medium text-gray-900" data-i18n="settings.application">Application</p><p class="text-xs text-gray-500" data-i18n="settings.app_desc">DeviceManager v1.0.0</p></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-about-content" class="card p-6 text-center" style="display:none">
+        <div class="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        </div>
+        <h2 class="text-xl font-bold text-gray-900" data-i18n="app.name">DeviceManager</h2>
+        <p class="text-sm text-gray-500 mt-1" data-i18n="app.tagline">Professional Device Management System</p>
+        <p class="text-xs text-gray-400 mt-4">Version 1.0.0</p>
+        <p class="text-xs text-gray-400 mt-1" data-i18n="settings.stack">Built with Flask · SQLite · Tailwind CSS</p>
+        <p class="text-xs text-gray-400 mt-1" data-i18n="settings.design">Designed for computer shops, repair centers, and technical workspaces</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const savedTheme = localStorage.getItem('theme') || 'light';
+
+    function switchTab(tab) {
+        ['appearance','system','about'].forEach(t => {
+            document.getElementById(`tab-${t}`).className = 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all flex-1 justify-center ' + (t === tab ? 'bg-white dark:bg-gray-800 shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700');
+            document.getElementById(`tab-${t}-content`).style.display = t === tab ? 'block' : 'none';
+        });
+    }
+
+    function toggleSettingsTheme() {
+        const html = document.documentElement;
+        const isDark = html.getAttribute('data-theme') === 'dark';
+        html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+        localStorage.setItem('theme', isDark ? 'light' : 'dark');
+        updateThemeUI(!isDark);
+        const label = document.getElementById('themeLabel');
+        label.textContent = isDark ? __('settings.light') : __('settings.dark');
+        document.getElementById('themeToggleBtn').classList.toggle('active');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const label = document.getElementById('themeLabel');
+        label.textContent = savedTheme === 'dark' ? __('settings.dark') : __('settings.light');
+        if (savedTheme === 'dark') document.getElementById('themeToggleBtn').classList.add('active');
+    });
+</script>
+{% endblock %}

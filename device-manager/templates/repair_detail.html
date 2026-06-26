@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-6 max-w-5xl mx-auto" id="detailContent">
+    <div class="flex justify-center py-20"><div class="spinner"></div></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const repairId = '{{ repair_id }}';
+    fetch(`/api/repairs/${repairId}`).then(r=>r.json()).then(r=>{
+        if (r.error) {
+            document.getElementById('detailContent').innerHTML = `<div class="text-center py-20"><h2 class="text-xl font-semibold text-gray-900">${__('repair.detail.not_found')}</h2><a href="/repair" class="text-blue-600 hover:text-blue-700 mt-2 inline-block">${__('repair.cancel')}</a></div>`;
+            return;
+        }
+        renderRepairDetail(r);
+    });
+
+    let currentRepair = null;
+
+    function renderRepairDetail(r) {
+        currentRepair = r;
+        const sections = [
+            {key:'probable_cause', label:__('repair_field.probable_cause'), icon:'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z'},
+            {key:'issue_description', label:__('repair_field.issue_description'), icon:'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z'},
+            {key:'symptoms', label:__('repair_field.symptoms'), icon:'M12 9v2m0 4h.01'},
+            {key:'diagnostic_notes', label:__('repair_field.diagnostic_notes'), icon:'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'},
+            {key:'checked_parts', label:__('repair_field.checked_parts'), icon:'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'},
+            {key:'replaced_parts', label:__('repair_field.replaced_parts'), icon:'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'},
+            {key:'tests_performed', label:__('repair_field.tests_performed'), icon:'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4'},
+            {key:'test_results', label:__('repair_field.test_results'), icon:'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'},
+            {key:'technician_notes', label:__('repair_field.technician_notes'), icon:'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'},
+        ];
+
+        function logActionsHtml(actionsStr) {
+            if (!actionsStr) return '';
+            const lines = actionsStr.split('\n').filter(l => l.trim());
+            return lines.map(line => {
+                const match = line.match(/^\[(.*?)\]\s*(.*)/);
+                if (match) {
+                    return `<div class="flex items-start gap-3 py-2">
+                        <div class="w-2 h-2 rounded-full bg-amber-500 mt-2 flex-shrink-0"></div>
+                        <div class="min-w-0">
+                            <p class="text-xs text-amber-600 font-medium">${match[1]}</p>
+                            <p class="text-sm text-gray-900 dark:text-white">${match[2]}</p>
+                        </div>
+                    </div>`;
+                }
+                return `<div class="flex items-start gap-3 py-2">
+                    <div class="w-2 h-2 rounded-full bg-gray-400 mt-2 flex-shrink-0"></div>
+                    <p class="text-sm text-gray-900 dark:text-white">${line}</p>
+                </div>`;
+            }).join('');
+        }
+
+        const hasActions = r.repair_actions && r.repair_actions.trim();
+
+        document.getElementById('detailContent').innerHTML = `
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <button onclick="history.back()" class="btn-ghost p-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+                    </button>
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white" data-i18n="repair.detail.title">${__('repair.detail.title')}</h1>
+                            ${statusBadge(r.repair_status)}
+                        </div>
+                        <a href="/systems/${r.device_id}" class="text-sm text-blue-600 hover:text-blue-700">${r.device.name}</a>
+                    </div>
+                </div>
+                <button onclick="toggleEdit()" class="btn-primary text-xs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    ${__('repair.edit')}
+                </button>
+            </div>
+
+            <div id="viewMode">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="card p-6">
+                            <p class="section-label" data-i18n="repair.detail.details">${__('repair.detail.details')}</p>
+                            <div class="space-y-4">
+                                ${sections.filter(s => s.key !== 'repair_actions').map(s => r[s.key] ? `
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/50 flex items-center justify-center flex-shrink-0">
+                                            <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${s.icon}"/></svg>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">${s.label}</p>
+                                            <p class="text-sm text-gray-900 dark:text-white mt-0.5 whitespace-pre-wrap">${r[s.key]}</p>
+                                        </div>
+                                    </div>
+                                ` : '').join('')}
+                                ${sections.every(s => !r[s.key] && s.key !== 'repair_actions') ? '<p class="text-sm text-gray-400 text-center py-4">'+__('repair.detail.no_details')+'</p>' : ''}
+                            </div>
+                        </div>
+
+                        <div class="card p-6" id="repairActionsSection">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="section-label mb-0" data-i18n="repair_field.repair_actions">${__('repair_field.repair_actions')}</p>
+                            </div>
+                            <div id="actionsLogList">
+                                ${hasActions ? logActionsHtml(r.repair_actions) : '<p class="text-sm text-gray-400 text-center py-4">'+__('repair.detail.no_details')+'</p>'}
+                            </div>
+                            <div class="mt-4 pt-4 border-t">
+                                <div class="flex gap-2">
+                                    <input type="text" id="logActionInput" class="input-field flex-1" data-i18n-placeholder="repair.log_placeholder" placeholder="Type action performed...">
+                                    <button onclick="logAction('${r.repair_actions ? r.repair_actions.replace(/\\/g,'\\\\').replace(/'/g,"\\'") : ''}')" class="btn-primary whitespace-nowrap">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        ${__('repair.log_action')}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="card p-6">
+                            <p class="section-label" data-i18n="repair.detail.assignment">${__('repair.detail.assignment')}</p>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                    <div><p class="text-xs text-gray-500" data-i18n="repair.detail.technician">${__('repair.detail.technician')}</p><p class="text-sm font-medium text-gray-900">${r.assigned_technician || __('repair.detail.not_assigned')}</p></div>
+                                </div>
+                                <div class="flex items-center gap-3 border-t pt-3">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <div><p class="text-xs text-gray-500" data-i18n="repair.detail.cost">${__('repair.detail.cost')}</p><p class="text-sm font-medium text-gray-900">${r.repair_cost !== null ? '$'+r.repair_cost.toFixed(2) : '—'}</p></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card p-6">
+                            <p class="section-label" data-i18n="repair.detail.timeline">${__('repair.detail.timeline')}</p>
+                            <div class="space-y-3">
+                                <div><p class="text-xs text-gray-500" data-i18n="repair.detail.entry">${__('repair.detail.entry')}</p><p class="text-sm font-medium text-gray-900">${formatDateTime(r.entry_date)}</p></div>
+                                ${r.expected_completion_date ? `<div class="border-t pt-3"><p class="text-xs text-gray-500" data-i18n="repair.detail.expected">${__('repair.detail.expected')}</p><p class="text-sm font-medium text-gray-900">${formatDateTime(r.expected_completion_date)}</p></div>` : ''}
+                                ${r.completion_date ? `<div class="border-t pt-3"><p class="text-xs text-gray-500" data-i18n="repair.detail.completed">${__('repair.detail.completed')}</p><p class="text-sm font-medium text-gray-900">${formatDateTime(r.completion_date)}</p></div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="editMode" style="display:none">
+                <div class="card p-6">
+                    <p class="section-label" data-i18n="repair.detail.details">${__('repair.detail.details')}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="repair.status">${__('repair.status')}</label>
+                            <select id="editStatus" class="input-field">
+                                <option value="PENDING" data-i18n="repair_status.PENDING" ${r.repair_status==='PENDING'?'selected':''}>${__('repair_status.PENDING')}</option>
+                                <option value="IN_PROGRESS" data-i18n="repair_status.IN_PROGRESS" ${r.repair_status==='IN_PROGRESS'?'selected':''}>${__('repair_status.IN_PROGRESS')}</option>
+                                <option value="COMPLETED" data-i18n="repair_status.COMPLETED" ${r.repair_status==='COMPLETED'?'selected':''}>${__('repair_status.COMPLETED')}</option>
+                                <option value="CANCELLED" data-i18n="repair_status.CANCELLED" ${r.repair_status==='CANCELLED'?'selected':''}>${__('repair_status.CANCELLED')}</option>
+                            </select>
+                        </div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="repair.technician">${__('repair.technician')}</label>
+                            <input type="text" id="editTech" class="input-field" value="${r.assigned_technician || ''}">
+                        </div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="repair.cost">${__('repair.cost')}</label>
+                            <input type="number" step="0.01" id="editCost" class="input-field" value="${r.repair_cost || ''}">
+                        </div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="repair.expected_completion">${__('repair.expected_completion')}</label>
+                            <input type="date" id="editExpected" class="input-field" value="${r.expected_completion_date ? r.expected_completion_date.split('T')[0] : ''}">
+                        </div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="repair.completion_date">${__('repair.completion_date')}</label>
+                            <input type="date" id="editCompletion" class="input-field" value="${r.completion_date ? r.completion_date.split('T')[0] : ''}">
+                        </div>
+                    </div>
+                    ${sections.map(s => `
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">${s.label}</label>
+                            ${s.key === 'diagnostic_notes' || s.key === 'technician_notes' || s.key === 'repair_actions'
+                                ? `<textarea id="edit_${s.key}" class="input-field resize-none" rows="3">${r[s.key] || ''}</textarea>`
+                                : `<input type="text" id="edit_${s.key}" class="input-field" value="${r[s.key] || ''}">`
+                            }
+                        </div>
+                    `).join('')}
+                    <div class="flex justify-end gap-3">
+                        <button onclick="toggleEdit()" class="btn-secondary" data-i18n="repair.cancel">${__('repair.cancel')}</button>
+                        <button onclick="saveEdit()" class="btn-primary" data-i18n="repair.save">${__('repair.save')}</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function logAction(existingActions) {
+        const input = document.getElementById('logActionInput');
+        const text = input.value.trim();
+        if (!text) return;
+        const now = new Date();
+        const ts = now.toLocaleString('en-US', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+        const newEntry = `[${ts}] ${text}`;
+        const updated = existingActions ? existingActions + '\n' + newEntry : newEntry;
+        input.value = '';
+        fetch(`/api/repairs/${repairId}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({repairActions: updated})
+        }).then(r => {
+            if (!r.ok) throw new Error('Failed');
+            showToast(__('repair.update_success'), 'success');
+            window.location.reload();
+        }).catch(() => showToast(__('toast.failed'), 'error'));
+    }
+
+    function toggleEdit() {
+        document.getElementById('viewMode').style.display = document.getElementById('viewMode').style.display === 'none' ? 'block' : 'none';
+        document.getElementById('editMode').style.display = document.getElementById('editMode').style.display === 'none' ? 'block' : 'none';
+    }
+
+    function saveEdit() {
+        const data = {
+            repairStatus: document.getElementById('editStatus').value,
+            assignedTechnician: document.getElementById('editTech').value,
+            repairCost: document.getElementById('editCost').value,
+            expectedCompletionDate: document.getElementById('editExpected').value,
+            completionDate: document.getElementById('editCompletion').value,
+        };
+        const fields = ['probable_cause','issue_description','symptoms','diagnostic_notes','checked_parts','replaced_parts','repair_actions','tests_performed','test_results','technician_notes'];
+        fields.forEach(f => { data[f.replace(/_([a-z])/g, (_,c) => c.toUpperCase())] = document.getElementById('edit_'+f).value; });
+
+        fetch(`/api/repairs/${repairId}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        }).then(r=>{
+            if (!r.ok) throw new Error('Failed');
+            showToast(__('repair.update_success'), 'success');
+            window.location.reload();
+        }).catch(()=>showToast(__('toast.failed'), 'error'));
+    }
+</script>
+{% endblock %}

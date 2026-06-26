@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <a href="/systems" class="btn-ghost p-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg></a>
+            <div><h1 class="text-2xl font-bold text-gray-900 dark:text-white" data-i18n="customer.title">Customer Systems</h1><p class="text-sm text-gray-500 mt-1" id="count" data-i18n="common.loading">Loading...</p></div>
+        </div>
+        <a href="/add-system" class="btn-primary"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg> <span data-i18n="add.register">Add System</span></a>
+    </div>
+    <div id="grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    fetch('/api/systems/customer').then(r=>r.json()).then(d=>{
+        document.getElementById('count').textContent = d.length + ' ' + __('systems.count');
+        const grid = document.getElementById('grid');
+        if (d.length===0) { grid.innerHTML = `<div class="col-span-full card p-12 text-center"><p class="text-sm text-gray-500">${__('customer.no_results')}</p></div>`; return; }
+        grid.innerHTML = d.map(dev => `
+            <a href="/systems/${dev.id}" class="card p-5 hover:shadow-md transition-all">
+                <h3 class="font-semibold text-gray-900 truncate mb-2">${dev.name}</h3>
+                <div class="flex flex-wrap gap-2 mb-3">${statusBadge(dev.status)}${dev.sub_category ? `<span class="badge bg-indigo-100 text-indigo-700 border-indigo-300">${dev.sub_category==='TESTING'?__('sub.TESTING'):__('sub.SHOP_USE')}</span>` : ''}</div>
+                <div class="text-xs text-gray-500">${dev.cpu ? '<p>CPU: '+dev.cpu+'</p>':''}${dev.ram ? '<p>RAM: '+dev.ram+'</p>':''}</div>
+                <div class="flex justify-between mt-3 pt-3 border-t text-xs text-gray-400"><span>${formatDate(dev.entry_date)}</span><span>${dev.repairs_count > 0 ? dev.repairs_count+' '+__('common.repairs') : __('common.no_repairs')}</span></div>
+            </a>
+        `).join('');
+    });
+</script>
+{% endblock %}
