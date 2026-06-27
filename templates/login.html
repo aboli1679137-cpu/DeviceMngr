@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeviceManager - Login</title>
+    <script src="/static/js/tailwind.js"></script>
+    <link rel="stylesheet" href="/static/css/inter.css">
+    <link rel="stylesheet" href="/static/css/vazirmatn.css">
+    <script src="/static/js/i18n.js"></script>
+    <style>
+        * { font-family: 'Inter', 'Vazirmatn', 'Tahoma', system-ui, sans-serif; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .glass { background: rgba(255,255,255,0.06); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; }
+        .input-field { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff; font-size: 14px; outline: none; transition: all 0.2s; }
+        .input-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.25); }
+        .input-field::placeholder { color: rgba(255,255,255,0.35); }
+        .btn-primary { width: 100%; padding: 12px; border-radius: 10px; background: #2563eb; color: #fff; font-size: 15px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .error-msg { color: #f87171; font-size: 13px; text-align: center; min-height: 20px; }
+    </style>
+</head>
+<body>
+    <div class="w-full max-w-sm mx-4">
+        <div class="glass p-8">
+            <div class="text-center mb-8">
+                <div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                </div>
+                <h1 class="text-xl font-bold text-white">DeviceManager</h1>
+                <p class="text-sm text-gray-400 mt-1" data-i18n="app.tagline">Professional Device Management System</p>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1.5" data-i18n="login.username">Username</label>
+                        <input type="text" id="username" class="input-field" data-i18n-placeholder="login.username_placeholder" placeholder="Enter username" required autocomplete="username" autofocus>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1.5" data-i18n="login.password">Password</label>
+                        <input type="password" id="password" class="input-field" data-i18n-placeholder="login.password_placeholder" placeholder="Enter password" required autocomplete="current-password">
+                    </div>
+                    <div class="error-msg" id="errorMsg"></div>
+                    <button type="submit" class="btn-primary" id="loginBtn" data-i18n="login.sign_in">Sign In</button>
+                </div>
+            </form>
+
+            <div class="mt-6 text-center">
+                <button onclick="toggleLanguage()" class="text-xs text-gray-500 hover:text-gray-300 transition-colors" id="langToggle">FA</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const err = document.getElementById('errorMsg');
+            btn.disabled = true;
+            btn.textContent = '...';
+            err.textContent = '';
+
+            try {
+                const res = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: document.getElementById('username').value.trim(),
+                        password: document.getElementById('password').value
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.href = '/';
+                } else {
+                    err.textContent = data.error || 'Login failed';
+                }
+            } catch (e) {
+                err.textContent = 'Connection error';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = __('login.sign_in');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setLanguage(localStorage.getItem('lang') || 'en');
+        });
+    </script>
+</body>
+</html>

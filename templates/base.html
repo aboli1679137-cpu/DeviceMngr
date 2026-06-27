@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeviceManager</title>
+    <script src="/static/js/tailwind.js"></script>
+    <link rel="stylesheet" href="/static/css/inter.css">
+    <link rel="stylesheet" href="/static/css/vazirmatn.css">
+    <script src="/static/js/i18n.js"></script>
+    <style>
+        * { font-family: 'Inter', 'Vazirmatn', 'Tahoma', system-ui, sans-serif; }
+        body { background-color: #f8fafc; color: #0f172a; }
+        .dark body { background-color: #020617; color: #f1f5f9; }
+        .sidebar { width: 260px; }
+        .glass { background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); border: 1px solid rgba(226,232,240,0.5); }
+        .dark .glass { background: rgba(15,23,42,0.8); border-color: rgba(51,65,85,0.5); }
+        .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s; }
+        .dark .card { background: #0f172a; border-color: #1e293b; }
+        .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .dark .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .input-field { width: 100%; padding: 10px 16px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; color: #0f172a; font-size: 14px; outline: none; transition: all 0.2s; }
+        .dark .input-field { background: #1e293b; border-color: #475569; color: #f1f5f9; }
+        .input-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+        .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; background: #2563eb; color: #fff; font-size: 14px; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; background: #f1f5f9; color: #475569; font-size: 14px; font-weight: 500; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; }
+        .dark .btn-secondary { background: #1e293b; color: #94a3b8; border-color: #334155; }
+        .btn-secondary:hover { background: #e2e8f0; }
+        .dark .btn-secondary:hover { background: #334155; }
+        .btn-danger { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; background: #dc2626; color: #fff; font-size: 14px; font-weight: 500; border: none; cursor: pointer; }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-ghost { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 8px; background: transparent; color: #64748b; font-size: 14px; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-ghost:hover { background: #f1f5f9; }
+        .dark .btn-ghost:hover { background: #1e293b; }
+        .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 500; border: 1px solid; }
+        .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 12px; }
+        .dark .section-label { color: #94a3b8; }
+        .toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: 12px; font-size: 14px; z-index: 9999; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast-success { background: #059669; color: #fff; }
+        .toast-error { background: #dc2626; color: #fff; }
+        .spinner { width: 32px; height: 32px; border: 4px solid #e2e8f0; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .toggle { position: relative; width: 48px; height: 24px; border-radius: 999px; background: #cbd5e1; cursor: pointer; transition: background 0.3s; }
+        .toggle.active { background: #2563eb; }
+        .toggle-knob { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: transform 0.3s; }
+        .toggle.active .toggle-knob { transform: translateX(24px); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        @media (max-width: 768px) { .sidebar { display: none; } .mobile-sidebar-open { display: block !important; position: fixed; top: 0; left: 0; z-index: 50; } }
+
+        /* RTL Support */
+        body.rtl .sidebar { right: 0; left: auto; border-right: none; border-left: 1px solid rgba(226,232,240,0.5); }
+        body.rtl #mainContent { margin-left: 0 !important; margin-right: 260px; }
+        body.rtl .input-field { text-align: right; }
+        body.rtl .toast { right: auto; left: 20px; }
+        body.rtl .absolute { /* handled per-element */ }
+        body.rtl .space-x-reverse > :not([hidden]) ~ :not([hidden]) { --tw-space-x-reverse: 1; }
+        body.rtl .ml-3 { margin-left: 0; margin-right: 0.75rem; }
+        body.rtl .pl-3 { padding-left: 0; padding-right: 0.75rem; }
+        body.rtl .pl-10 { padding-left: 1rem; padding-right: 2.5rem; }
+        body.rtl .left-3 { left: auto; right: 0.75rem; }
+        body.rtl .right-1 { right: auto; left: 0.25rem; }
+        body.rtl .border-r { border-right: none; border-left: 1px solid; }
+        body.rtl .border-l { border-left: none; border-right: 1px solid; }
+        body.rtl .text-right { text-align: left; }
+        body.rtl [dir="ltr"] { direction: ltr; }
+        body.rtl .font-[sans-serif] { font-family: 'Vazirmatn', 'Tahoma', 'Inter', system-ui, sans-serif; }
+        body.rtl, body.rtl input, body.rtl select, body.rtl textarea { font-family: 'Vazirmatn', 'Tahoma', 'Inter', system-ui, sans-serif; }
+        body.rtl .section-label { letter-spacing: 0; }
+        body.rtl .sidebar .border-r { border-right: none; }
+        body.rtl .ml-auto { margin-left: 0; margin-right: auto; }
+
+        /* Lang toggle styling */
+        .lang-btn { min-width: 55px; font-weight: 600; letter-spacing: 0.5px; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="flex">
+        <!-- Sidebar -->
+        <aside class="sidebar fixed top-0 left-0 z-40 h-screen glass border-r" id="sidebar">
+            <div class="flex flex-col h-full">
+                <div class="flex items-center gap-3 px-5 h-16 border-b" style="direction:ltr">
+                    <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                        <h1 class="text-sm font-bold text-gray-900 dark:text-white">DeviceManager</h1>
+                        <p class="text-[10px] text-gray-500" data-i18n="app.subtitle">Workspace Admin</p>
+                    </div>
+                </div>
+                <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-6" id="sidebarNav"></nav>
+                <div class="p-3 border-t">
+                    <button onclick="toggleSidebar()" class="flex items-center justify-center w-full py-2 px-3 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <div class="flex-1 flex flex-col min-h-screen" style="margin-left:260px" id="mainContent">
+            <!-- Topbar -->
+            <header class="sticky top-0 z-30 glass border-b">
+                <div class="flex items-center justify-between h-16 px-6">
+                    <div class="flex items-center gap-4 flex-1">
+                        <button class="md:hidden btn-ghost p-2" onclick="document.getElementById('sidebar').classList.toggle('mobile-sidebar-open')">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        </button>
+                        <div class="relative max-w-md w-full" id="searchContainer">
+                            <form id="searchForm" onsubmit="handleSearch(event)">
+                                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 rtl:right-3 rtl:left-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                <input type="text" id="searchInput" data-i18n-placeholder="systems.search" placeholder="Search systems by name, serial, hardware..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 rtl:pr-10 rtl:pl-4">
+                            </form>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="toggleLanguage()" class="btn-ghost p-2 lang-btn text-xs font-bold" id="langToggle">
+                            FA
+                        </button>
+                        <a href="/add-system" class="btn-primary text-xs px-4 py-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            <span class="hidden sm:inline" data-i18n="nav.add_system">Add System</span>
+                        </a>
+                        <button onclick="toggleTheme()" class="btn-ghost p-2" id="themeToggle">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                        </button>
+                        <div class="flex items-center gap-3 ml-3 pl-3 border-l rtl:mr-3 rtl:pr-3 rtl:ml-0 rtl:pl-0 rtl:border-r rtl:border-l-0">
+                            {% if session.get('user_id') %}
+                            <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-semibold">{{ session.get('username', 'U')[:1].upper() }}</div>
+                            <div class="hidden sm:block">
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ session.get('username', 'User') }}</p>
+                                <p class="text-[10px] text-gray-500">{{ session.get('role', '') }}</p>
+                            </div>
+                            <a href="/logout" class="btn-ghost p-2 text-xs" data-i18n="nav.logout">Logout</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 p-6 overflow-auto" id="mainContentArea">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="toast"></div>
+
+    <script>
+        // Sidebar nav groups with i18n keys
+        const isNormal = {{ 'true' if session.get('role') == 'normal' else 'false' }};
+        const navGroups = [
+            { sectionKey: 'nav.overview', items: [
+                { href: '/', labelKey: 'nav.dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' }
+            ]},
+            { sectionKey: 'nav.management', items: [
+                { href: '/add-system', labelKey: 'nav.add_system', icon: 'M12 4v16m8-8H4' },
+                { href: '/systems', labelKey: 'nav.all_systems', icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' }
+            ]},
+            { sectionKey: 'nav.categories', items: isNormal ? [] : [
+                { href: '/systems/customer', labelKey: 'nav.customer_systems', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z' },
+                { href: '/systems/for-sale', labelKey: 'nav.for_sale', icon: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z' },
+                { href: '/systems/internal', labelKey: 'nav.internal_use', icon: 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4' }
+            ]},
+            { sectionKey: 'nav.service', items: [
+                { href: '/repair', labelKey: 'nav.repair_systems', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' }
+            ]},
+            { sectionKey: 'nav.system', items: isNormal ? [] : [
+                { href: '/settings', labelKey: 'nav.settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' }
+            ]}
+        ];
+
+        function renderSidebar() {
+            const nav = document.getElementById('sidebarNav');
+            const path = window.location.pathname;
+            let html = '';
+            navGroups.forEach(group => {
+                html += `<div><p class="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400">${__(group.sectionKey)}</p><ul class="space-y-0.5">`;
+                group.items.forEach(item => {
+                    const isActive = path === item.href || (item.href !== '/' && path.startsWith(item.href));
+                    html += `<li><a href="${item.href}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-200'}">
+                        <svg class="w-5 h-5 flex-shrink-0 ${isActive ? 'text-blue-600' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${item.icon}"/></svg>
+                        <span>${__(item.labelKey)}</span></a></li>`;
+                });
+                html += '</ul></div>';
+            });
+            nav.innerHTML = html;
+        }
+
+        function handleSearch(e) {
+            e.preventDefault();
+            const q = document.getElementById('searchInput').value.trim();
+            if (q) window.location.href = '/systems?search=' + encodeURIComponent(q);
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+            updateThemeUI(!isDark);
+        }
+
+        function updateThemeUI(isDark) {
+            const btn = document.getElementById('themeToggle');
+            if (isDark) {
+                document.body.parentElement.classList.add('dark');
+                btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>';
+            } else {
+                document.body.parentElement.classList.remove('dark');
+                btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>';
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const main = document.getElementById('mainContent');
+            const isCollapsed = sidebar.style.width === '72px';
+            sidebar.style.width = isCollapsed ? '260px' : '72px';
+            main.style.marginLeft = isCollapsed ? '260px' : '72px';
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeUI(savedTheme === 'dark');
+            renderSidebar();
+            renderHardwareDatalists();
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

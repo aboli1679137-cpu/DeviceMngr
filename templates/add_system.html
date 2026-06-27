@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white" data-i18n="add.title">Register New System</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1" data-i18n="add.subtitle">Add a new computer system to the inventory</p>
+    </div>
+
+    <form id="addSystemForm" class="space-y-6">
+        <div class="card p-6">
+            <p class="section-label" data-i18n="add.basic_info">Basic Information</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="add.system_name">System Name *</label>
+                    <input type="text" id="name" required class="input-field" data-i18n-placeholder="add.system_name" placeholder="e.g. Dell OptiPlex 7090">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="add.serial_number">Serial Number</label>
+                    <input type="text" id="serialNumber" class="input-field" data-i18n-placeholder="add.serial_number" placeholder="e.g. SN-2024-001">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="add.date_of_entry">Date of Entry</label>
+                    <input type="date" id="entryDate" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="add.category">Category *</label>
+                    <select id="category" class="input-field" onchange="toggleSubCategory(); toggleCustomerName();">
+                        <option value="CUSTOMER" data-i18n="category.CUSTOMER">Customer System</option>
+                        <option value="FOR_SALE" data-i18n="category.FOR_SALE">For Sale</option>
+                        <option value="INTERNAL" data-i18n="category.INTERNAL">Internal Use</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="add.status">Status</label>
+                    <select id="status" class="input-field">
+                        <option value="PENDING_INSPECTION" data-i18n="status.PENDING_INSPECTION">Pending Inspection</option>
+                        <option value="READY" data-i18n="status.READY">Ready</option>
+                        <option value="TESTED" data-i18n="status.TESTED">Tested</option>
+                        <option value="DAMAGED" data-i18n="status.DAMAGED">Damaged</option>
+                        <option value="ARCHIVED" data-i18n="status.ARCHIVED">Archived</option>
+                    </select>
+                </div>
+                <div id="subCategoryContainer" style="display:none">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="add.subcategory">Subcategory *</label>
+                    <select id="subCategory" class="input-field">
+                        <option value="TESTING" data-i18n="sub.TESTING">For Testing</option>
+                        <option value="SHOP_USE" data-i18n="sub.SHOP_USE">For Shop/Internal Use</option>
+                    </select>
+                </div>
+                <div id="customerNameContainer" style="display:block">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="add.customer_name">Customer Name</label>
+                    <input type="text" id="customerName" class="input-field" data-i18n-placeholder="add.customer_name_placeholder" placeholder="Enter customer name">
+                </div>
+                <div id="customerPhoneContainer" style="display:block" class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="add.customer_phone">Customer Phone</label>
+                    <input type="text" id="customerPhone" class="input-field" data-i18n-placeholder="add.customer_phone_placeholder" placeholder="Enter phone number">
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-6">
+            <p class="section-label" data-i18n="add.hardware_specs">Hardware Specifications</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="hw.cpu">CPU</label>
+                    <input type="text" id="cpu" class="input-field" list="hw-cpu-list" data-i18n-placeholder="hw.placeholder.cpu" placeholder="e.g. Intel Core i7-13700K" autocomplete="off">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="hw.ram">RAM</label>
+                    <input type="text" id="ram" class="input-field" list="hw-ram-list" data-i18n-placeholder="hw.placeholder.ram" placeholder="e.g. 32GB DDR5 5600MHz" autocomplete="off">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="hw.gpu">GPU</label>
+                    <input type="text" id="gpu" class="input-field" list="hw-gpu-list" data-i18n-placeholder="hw.placeholder.gpu" placeholder="e.g. NVIDIA RTX 4070" autocomplete="off">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="hw.storage">Storage</label>
+                    <input type="text" id="storage" class="input-field" list="hw-storage-list" data-i18n-placeholder="hw.placeholder.storage" placeholder="e.g. 1TB NVMe SSD" autocomplete="off">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="hw.motherboard">Motherboard</label>
+                    <input type="text" id="motherboard" class="input-field" list="hw-motherboard-list" data-i18n-placeholder="hw.placeholder.motherboard" placeholder="e.g. ASUS ROG Z790" autocomplete="off">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="hw.power_supply">Power Supply</label>
+                    <input type="text" id="powerSupply" class="input-field" list="hw-power_supply-list" data-i18n-placeholder="hw.placeholder.psu" placeholder="e.g. 850W Gold" autocomplete="off">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="hw.case">Case</label>
+                    <input type="text" id="case_field" class="input-field" list="hw-case-list" data-i18n-placeholder="hw.placeholder.case" placeholder="e.g. NZXT H5 Flow" autocomplete="off">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" data-i18n="hw.condition">Condition</label>
+                    <input type="text" id="condition_field" class="input-field" list="hw-condition-list" data-i18n-placeholder="hw.placeholder.condition" placeholder="e.g. Excellent, Good, Fair" autocomplete="off">
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-6">
+            <p class="section-label" data-i18n="add.notes_section">Additional Notes</p>
+            <textarea id="notes" rows="4" class="input-field resize-none" data-i18n-placeholder="hw.placeholder.notes" placeholder="Enter any additional notes or remarks about this system..."></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3">
+            <button type="button" onclick="history.back()" class="btn-secondary" data-i18n="add.cancel">Cancel</button>
+            <button type="submit" class="btn-primary" id="submitBtn"><span data-i18n="add.register">Register System</span></button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('entryDate').valueAsDate = new Date();
+
+    function toggleSubCategory() {
+        const cat = document.getElementById('category').value;
+        document.getElementById('subCategoryContainer').style.display = cat === 'INTERNAL' ? 'block' : 'none';
+    }
+
+    function toggleCustomerName() {
+        const cat = document.getElementById('category').value;
+        const show = cat === 'CUSTOMER';
+        document.getElementById('customerNameContainer').style.display = show ? 'block' : 'none';
+        document.getElementById('customerPhoneContainer').style.display = show ? 'block' : 'none';
+    }
+
+    toggleCustomerName();
+
+    document.getElementById('addSystemForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span data-i18n="add.saving">Saving...</span>';
+
+        const data = {
+            name: document.getElementById('name').value,
+            serialNumber: document.getElementById('serialNumber').value,
+            customerName: document.getElementById('customerName').value,
+            customerPhone: document.getElementById('customerPhone').value,
+            category: document.getElementById('category').value,
+            subCategory: document.getElementById('category').value === 'INTERNAL' ? document.getElementById('subCategory').value : null,
+            status: document.getElementById('status').value,
+            cpu: document.getElementById('cpu').value,
+            ram: document.getElementById('ram').value,
+            gpu: document.getElementById('gpu').value,
+            storage: document.getElementById('storage').value,
+            motherboard: document.getElementById('motherboard').value,
+            powerSupply: document.getElementById('powerSupply').value,
+            case_: document.getElementById('case_field').value,
+            condition: document.getElementById('condition_field').value,
+            notes: document.getElementById('notes').value,
+            entryDate: document.getElementById('entryDate').value
+        };
+
+        fetch('/api/devices', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        }).then(r => {
+            if (!r.ok) throw new Error('Failed to save');
+            return r.json();
+        }).then(() => {
+            showToast(__('toast.system_created'), 'success');
+            window.location.href = '/systems';
+        }).catch(err => {
+            showToast(__('toast.failed'), 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<span data-i18n="add.register">Register System</span>';
+        });
+    });
+</script>
+{% endblock %}
